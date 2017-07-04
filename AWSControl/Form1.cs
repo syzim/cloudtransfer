@@ -16,12 +16,12 @@ namespace AWSControl
     {
         picDb db = new picDb();
         AmazonS3Client client = new AmazonS3Client();
-        string myBucket = "usa";
+        string myBucket = System.Configuration.ConfigurationManager.AppSettings["bucketprefix"];
         List<Size> sizeList = new List<Size>();
         static List<int> folderIndex = new List<int>();
 
 
-        string baseUrl = "https://s3-ap-southeast-2.amazonaws.com/";
+        string baseUrl = System.Configuration.ConfigurationManager.AppSettings["s3BaseUrl"];
 
 
 
@@ -192,7 +192,7 @@ namespace AWSControl
             var versions = getVersions();
 
 
-            string rpath = "E:\\Photos USA Dump\\";
+            string rpath = System.Configuration.ConfigurationManager.AppSettings["folderPath"];
             string state = pic.path.Substring(19, 2);
 
             foreach (string size in versions.Keys)
@@ -287,7 +287,7 @@ namespace AWSControl
         {
 
 
-            string path = "E:\\Photos USA Dump";
+            string path = System.Configuration.ConfigurationManager.AppSettings["folderPath"];
             List<MetaImage> images = new List<MetaImage>();
 
             int counter = 0;
