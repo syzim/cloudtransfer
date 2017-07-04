@@ -14,10 +14,10 @@ namespace AWSControl
 {
     public partial class Form1 : Form
     {
-         picDb db = new picDb();
-         AmazonS3Client client = new AmazonS3Client();
-         string myBucket = "usa";
-         List<Size> sizeList = new List<Size>();
+        picDb db = new picDb();
+        AmazonS3Client client = new AmazonS3Client();
+        string myBucket = "usa";
+        List<Size> sizeList = new List<Size>();
         static List<int> folderIndex = new List<int>();
 
 
@@ -39,7 +39,7 @@ namespace AWSControl
             refreshForm();
         }
 
-      
+
         private void refreshForm()
         {
 
@@ -48,12 +48,12 @@ namespace AWSControl
             label4.Text = PhotoData.getCurrent.lng.ToString();
             label3.Text = PhotoData.getCurrent.taken.ToString();
             label5.Text = PhotoData.getCurrent.id;
-            stateLabel.Text = PhotoData.getCurrent.path.Substring(19,2); ;
-            if(checkOnline() == true)
+            stateLabel.Text = PhotoData.getCurrent.path.Substring(19, 2); ;
+            if (checkOnline() == true)
             {
                 label6.Text = "Online";
                 label6.BackColor = System.Drawing.Color.LightGreen;
-                uploadBtn.Enabled = false;
+                // uploadBtn.Enabled = false;
             }
             else
             {
@@ -66,7 +66,7 @@ namespace AWSControl
         private void next_Click(object sender, EventArgs e)
         {
             var i = PhotoData.Index;
-            if (i < (PhotoData.Images.Count()-1))
+            if (i < (PhotoData.Images.Count() - 1))
             {
                 PhotoData.Index = PhotoData.Index + 1;
                 pictureBox2.ImageLocation = PhotoData.getCurrent.path;
@@ -78,7 +78,7 @@ namespace AWSControl
 
             }
             refreshForm();
-            
+
 
 
         }
@@ -109,34 +109,88 @@ namespace AWSControl
 
         private async void uploadBtn_Click(object sender, EventArgs e)
         {
+            uploadBtn.Enabled = false;
             var pic = PhotoData.getCurrent;
-            await uploadImage(pic,db);
-            
+
+            await uploadImage(pic, db);
+
 
         }
-        private Boolean  checkOnline()
+        private Boolean checkOnline()
         {
             MetaImage i = PhotoData.getCurrent;
             var e = db.MetaImages.Any(x => x.id == i.id);
             S3FileInfo file = new S3FileInfo(client, "usasmall", i.id + ".jpg");
-            if(e && file.Exists == true)
+            if (e && file.Exists == true)
             {
                 return true;
             }
             return false;
         }
+
+        private void deleteBtn_Click(object sender, EventArgs e)
+        {
+            var currentPic = PhotoData.getCurrent;
+
+            foreach (string size in getVersions().Keys)
+            {
+                var b = myBucket + size;
+
+
+                DeleteObjectRequest deleteObjectRequest =
+                    new DeleteObjectRequest
+                    {
+                        BucketName = b,
+                        Key = currentPic.id
+                    };
+                try
+                {
+                    client.DeleteObject(deleteObjectRequest);
+                }
+                catch (AmazonS3Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.Message);
+                    continue;
+                }
+
+            }
+
+
+            bool exists = db.MetaImages.Any(x => x.id == currentPic.id);
+            if (exists == true)
+            {
+                try
+                {
+                    var toDelete = db.MetaImages.Where(x => x.id == currentPic.id).FirstOrDefault();
+                    db.MetaImages.Remove(toDelete);
+                    db.SaveChanges();
+                }
+                catch (AmazonS3Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.Message);
+                }
+
+            }
+            refreshForm();
+
+        }
+        private Dictionary<string, string> getVersions()
+        {
+            Dictionary<string, string> versions = new Dictionary<string, string>();
+            versions.Add("small", "width=267&height=200&autorotate=true&bgcolor=black");
+            versions.Add("medium", "width=667&height=500&autorotate=true&bgcolor=black"); //Crop to square thumbnail
+            versions.Add("large", "width=1333&height=1000&autorotate=true&bgcolor=black");
+            versions.Add("tiny", "width=150&height=113&autorotate=true&bgcolor=black");
+            versions.Add("nano", "width=80&height=60&autorotate=true&bgcolor=black"); //Crop to square thumbnail
+            versions.Add("xtranano", "width=30&height=23&autorotate=true&bgcolor=black");
+            return versions;
+        }
         private async Task uploadImage(MetaImage pic, picDb db)
 
         {
 
-            Dictionary<string, string> versions = new Dictionary<string, string>();
+            var versions = getVersions();
 
-            versions.Add("small", "width=267&height=200crop=auto&autorotate=true&bgcolor=black");
-            versions.Add("medium", "width=667&height=500&autorotate=true&bgcolor=black"); //Crop to square thumbnail
-            versions.Add("large", "width=1333&height=1000&autorotate=true&bgcolor=black");
-            versions.Add("tiny", "width=150&height=113crop=auto&autorotate=true&bgcolor=black");
-            versions.Add("nano", "width=80&height=60crop=auto&autorotate=true&bgcolor=black"); //Crop to square thumbnail
-            versions.Add("xtranano", "width=30&height=23crop=auto&autorotate=true&bgcolor=black");
 
             string rpath = "E:\\Photos USA Dump\\";
             string state = pic.path.Substring(19, 2);
@@ -178,7 +232,7 @@ namespace AWSControl
 
                     };
 
-                     await Task.Run(() => client.PutObject(putImage));
+                    await Task.Run(() => client.PutObject(putImage));
                     System.Diagnostics.Debug.WriteLine("Image Uploaded");
 
 
@@ -188,14 +242,28 @@ namespace AWSControl
                 catch (AmazonS3Exception e)
                 {
                     System.Diagnostics.Debug.WriteLine("error uploading photo to bucket " + bucketName + ":" + e.Message);
-                    
+
                 }
             }
-            db.MetaImages.Add(pic);
-            db.SaveChanges();
-            
-            
-        
+            bool exists = db.MetaImages.Any(x => x.id == pic.id);
+            if (exists == false)
+            {
+                try
+                {
+                    db.MetaImages.Add(pic);
+                    db.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine("added pic");
+
+                }
+                catch (Exception p)
+                {
+                    System.Diagnostics.Debug.WriteLine("error adding photo to db " + p.Message);
+
+                }
+            }
+
+
+
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -208,7 +276,7 @@ namespace AWSControl
             }
             else
             {
-                PhotoData.Index = PhotoData.Images.Count -1;
+                PhotoData.Index = PhotoData.Images.Count - 1;
                 pictureBox2.ImageLocation = PhotoData.getCurrent.path;
 
             }
@@ -217,7 +285,7 @@ namespace AWSControl
         }
         private static List<MetaImage> ImageSearch()
         {
-           
+
 
             string path = "E:\\Photos USA Dump";
             List<MetaImage> images = new List<MetaImage>();
@@ -303,6 +371,67 @@ namespace AWSControl
                 PhotoData.Index = nextState;
                 pictureBox2.ImageLocation = PhotoData.getCurrent.path;
                 refreshForm();
+            }
+        }
+
+        private void deleteAll_Click(object sender, EventArgs e)
+        {
+            foreach (string size in getVersions().Keys)
+            {
+                try
+                {
+                    ListObjectsV2Request request = new ListObjectsV2Request
+                    {
+                        BucketName = myBucket + size
+                    };
+
+                    DeleteObjectsRequest multiObjectDeleteRequest = new DeleteObjectsRequest();
+                    multiObjectDeleteRequest.BucketName = request.BucketName;
+
+                    ListObjectsV2Response response = client.ListObjectsV2(request);
+                    foreach (S3Object item in response.S3Objects)
+                    {
+                        multiObjectDeleteRequest.AddKey(item.Key, null);
+
+                    }
+                    if (multiObjectDeleteRequest.Objects.Count > 0)
+                    {
+                        DeleteObjectsResponse dor = client.DeleteObjects(multiObjectDeleteRequest);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Bucket Empty");
+                    }
+
+
+                }
+                catch (AmazonS3Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("unable to delete bucket "+ ex);
+
+                }
+            }
+            try
+            {
+                db.Database.ExecuteSqlCommand("TRUNCATE TABLE METAIMAGES");
+                System.Diagnostics.Debug.WriteLine("Database Cleared");
+
+            }
+            catch (Exception exc)
+            {
+                System.Diagnostics.Debug.WriteLine(exc.Message);
+            }
+        }
+
+        private async void  uploadAll_Click(object sender, EventArgs e)
+        {
+            uploadBtn.Enabled = false;
+
+            for(int i=0;i < PhotoData.Images.Count();i++)
+            {
+               await uploadImage(PhotoData.Images[i], db);
+                System.Diagnostics.Debug.WriteLine("Uploaded " + (i + 1) + " of " +  PhotoData.Images.Count());
+                
             }
         }
     }

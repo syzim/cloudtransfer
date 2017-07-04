@@ -41,6 +41,9 @@
             this.label6 = new System.Windows.Forms.Label();
             this.nextState = new System.Windows.Forms.Button();
             this.stateLabel = new System.Windows.Forms.Label();
+            this.deleteBtn = new System.Windows.Forms.Button();
+            this.deleteAll = new System.Windows.Forms.Button();
+            this.uploadAll = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.SuspendLayout();
             // 
@@ -165,9 +168,42 @@
             this.stateLabel.Size = new System.Drawing.Size(0, 13);
             this.stateLabel.TabIndex = 13;
             // 
+            // deleteBtn
+            // 
+            this.deleteBtn.Location = new System.Drawing.Point(994, 201);
+            this.deleteBtn.Name = "deleteBtn";
+            this.deleteBtn.Size = new System.Drawing.Size(75, 23);
+            this.deleteBtn.TabIndex = 14;
+            this.deleteBtn.Text = "Delete";
+            this.deleteBtn.UseVisualStyleBackColor = true;
+            this.deleteBtn.Click += new System.EventHandler(this.deleteBtn_Click);
+            // 
+            // deleteAll
+            // 
+            this.deleteAll.Location = new System.Drawing.Point(997, 29);
+            this.deleteAll.Name = "deleteAll";
+            this.deleteAll.Size = new System.Drawing.Size(75, 23);
+            this.deleteAll.TabIndex = 15;
+            this.deleteAll.Text = "Delete All Data!";
+            this.deleteAll.UseVisualStyleBackColor = true;
+            this.deleteAll.Click += new System.EventHandler(this.deleteAll_Click);
+            // 
+            // uploadAll
+            // 
+            this.uploadAll.Location = new System.Drawing.Point(994, 77);
+            this.uploadAll.Name = "uploadAll";
+            this.uploadAll.Size = new System.Drawing.Size(75, 23);
+            this.uploadAll.TabIndex = 16;
+            this.uploadAll.Text = "Upload All";
+            this.uploadAll.UseVisualStyleBackColor = true;
+            this.uploadAll.Click += new System.EventHandler(this.uploadAll_Click);
+            // 
             // Form1
             // 
             this.ClientSize = new System.Drawing.Size(1093, 750);
+            this.Controls.Add(this.uploadAll);
+            this.Controls.Add(this.deleteAll);
+            this.Controls.Add(this.deleteBtn);
             this.Controls.Add(this.stateLabel);
             this.Controls.Add(this.nextState);
             this.Controls.Add(this.label6);
@@ -204,6 +240,9 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button nextState;
         private System.Windows.Forms.Label stateLabel;
+        private System.Windows.Forms.Button deleteBtn;
+        private System.Windows.Forms.Button deleteAll;
+        private System.Windows.Forms.Button uploadAll;
     }
 }
 
