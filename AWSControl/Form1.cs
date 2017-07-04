@@ -125,7 +125,9 @@ namespace AWSControl
             {
                 return true;
             }
+
             return false;
+
         }
 
         private void deleteBtn_Click(object sender, EventArgs e)
@@ -288,6 +290,7 @@ namespace AWSControl
 
 
             string path = System.Configuration.ConfigurationManager.AppSettings["folderPath"];
+            System.Diagnostics.Debug.WriteLine(path);
             List<MetaImage> images = new List<MetaImage>();
 
             int counter = 0;
